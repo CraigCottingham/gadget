@@ -1,6 +1,6 @@
 # Gadget
 
-TODO: Write a gem description
+Some methods for getting metadata and other deep details from a PostgreSQL database.
 
 ## Installation
 

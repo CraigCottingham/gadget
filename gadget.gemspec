@@ -1,4 +1,5 @@
-# coding: utf-8
+# encoding: utf-8
+
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'gadget/version'
@@ -8,8 +9,8 @@ Gem::Specification.new do | spec |
   spec.version       = Gadget::VERSION
   spec.authors       = [ 'Craig S. Cottingham' ]
   spec.email         = [ 'craig.cottingham@gmail.com' ]
-  spec.description   = %q{TODO: Write a gem description}
-  spec.summary       = %q{TODO: Write a gem summary}
+  spec.summary       = %q{Some methods for getting metadata and other deep details from a PostgreSQL database.}
+  spec.description   = File.read(File.join(File.dirname(__FILE__), 'README.md'))
   spec.homepage      = ''
   spec.license       = 'MIT'
 

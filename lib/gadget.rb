@@ -64,32 +64,30 @@ AND pg_constraint.contype='f'
     tuples
   end
 
-  def self.tables_in_dependency_order(conn)
+  def self.dependencies(conn)
     tables = self.tables(conn)
     foreign_keys = self.foreign_keys(conn)
-    deps = tables.keys.inject(TsortableHash.new) do | h, k |
-      if foreign_keys.has_key?(k)
-        h[k] = foreign_keys[k][:refs]
-      else
-        h[k] = []
+    dependencies = tables.reduce({}) do | h, (tablename, _) |
+      h[tablename] = []
+      refs = foreign_keys[tablename]
+      unless refs.nil?
+        refs[:refs].each { | ref | h[tablename] << ref }
       end
       h
     end
-    deps.tsort
+  end
+
+  def self.tables_in_dependency_order(conn)
+    self.dependencies(conn).reduce(TsortableHash.new) { | h, (k, v) | h[k] = v; h }.tsort
   end
 
   def self.dependency_graph(conn)
-    tables = self.tables(conn)
-    foreign_keys = self.foreign_keys(conn)
     puts "digraph dependencies {"
-    tables.each do | tablename, _ |
-      refs = foreign_keys[tablename]
-      if refs.nil?
+    self.dependencies(conn).each do | tablename, deps |
+      if deps.empty?
         puts %Q<"#{tablename}">
       else
-        refs[:refs].each do | ref |
-          puts %Q|"#{tablename}" -> "#{ref}"|
-        end
+        deps.each { | dep | puts %Q|"#{tablename}" -> "#{dep}"| }
       end
     end
     puts "}"

@@ -18,7 +18,7 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+See the methods in gadget.rb.
 
 ## Contributing
 

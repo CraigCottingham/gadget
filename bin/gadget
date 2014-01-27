@@ -4,8 +4,9 @@ require 'gadget'
 
 require 'pg'
 
-(dbname) = ARGV
+dbname = ARGV.shift
 
 conn = PG::Connection.open(:dbname => dbname)
 tables = Gadget.tables_in_dependency_order(conn)
 conn.close
+p tables

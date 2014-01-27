@@ -59,4 +59,21 @@ AND pg_constraint.contype='f'
     deps.tsort
   end
 
+  def self.dependency_graph(conn)
+    tables = self.tables(conn)
+    foreign_keys = self.foreign_keys(conn)
+    puts "digraph dependencies {"
+    tables.each do | tablename, _ |
+      refs = foreign_keys[tablename]
+      if refs.nil?
+        puts %Q<"#{tablename}">
+      else
+        refs[:refs].each do | ref |
+          puts %Q|"#{tablename}" -> "#{ref}"|
+        end
+      end
+    end
+    puts "}"
+  end
+
 end

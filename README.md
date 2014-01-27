@@ -18,7 +18,29 @@ Or install it yourself as:
 
 ## Usage
 
-See the methods in gadget.rb.
+`#tables(conn)`
+
+Returns a list of all tables in the schema reachable through `conn`.
+
+`#columns(conn, tablename=nil)`
+
+Returns a list of all columns in the schema reachable through `conn`.
+If `tablename` is given, returns the columns in only that table.
+
+`#foreign_keys(conn, tablename=nil)`
+
+Returns a list of all foreign keys in the schema reachable through `conn`.
+If `tablename` is given, returns the foreign keys in only that table.
+
+`#dependencies(conn)`
+
+Returns a structure representing the dependencies between tables in the schema reachable through `conn`.
+Table A is defined as dependent on table B if A contains a foreign key reference to B.
+
+`#tables_in_dependency_order(conn)`
+
+Returns a list of all tables in the schema reachable through `conn`, ordered such that any given table
+appears later in the list than all of its dependencies.
 
 ## Contributing
 

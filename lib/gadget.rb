@@ -22,6 +22,25 @@ module Gadget
     tuples
   end
 
+  def self.columns(conn, tablename = nil)
+    sql = <<-END_OF_SQL
+SELECT t.tablename, a.attname
+FROM pg_attribute a
+INNER JOIN pg_class c ON a.attrelid=c.oid
+INNER JOIN pg_tables t ON c.relname=t.tablename
+    END_OF_SQL
+    if tablename.nil?
+      rs = conn.exec(sql)
+    else
+      sql += " WHERE t.tablename=$1"
+      rs = conn.exec_params(sql, [ tablename ])
+    end
+    # tuples = rs.map { | row | row }
+    tuples = rs.reduce({}) { | h, row | h[row['tablename']] ||= { :columns => [] }; h[row['tablename']][:columns] << row['attname']; h }
+    rs.clear
+    tuples
+  end
+
   def self.foreign_keys(conn, tablename = nil)
     sql = <<-END_OF_SQL
 SELECT t1.tablename AS tablename, t2.tablename AS refname

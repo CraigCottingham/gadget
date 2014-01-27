@@ -28,14 +28,14 @@ SELECT t.tablename, a.attname
 FROM pg_attribute a
 INNER JOIN pg_class c ON a.attrelid=c.oid
 INNER JOIN pg_tables t ON c.relname=t.tablename
+WHERE a.attnum >= 0
     END_OF_SQL
     if tablename.nil?
       rs = conn.exec(sql)
     else
-      sql += " WHERE t.tablename=$1"
+      sql += " AND t.tablename=$1"
       rs = conn.exec_params(sql, [ tablename ])
     end
-    # tuples = rs.map { | row | row }
     tuples = rs.reduce({}) { | h, row | h[row['tablename']] ||= { :columns => [] }; h[row['tablename']][:columns] << row['attname']; h }
     rs.clear
     tuples

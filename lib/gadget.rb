@@ -43,7 +43,7 @@ WHERE a.attnum >= 0
 
   def self.foreign_keys(conn, tablename = nil)
     sql = <<-END_OF_SQL
-SELECT t1.tablename AS tablename, t2.tablename AS refname
+SELECT t1.tablename AS tablename, pg_constraint.conkey as cols, t2.tablename AS refname, pg_constraint.confkey as refcols
 FROM pg_constraint
 INNER JOIN pg_class c1 ON pg_constraint.conrelid=c1.oid
 INNER JOIN pg_tables t1 ON c1.relname=t1.tablename
@@ -59,7 +59,19 @@ AND pg_constraint.contype='f'
       sql += " AND t1.tablename=$1"
       rs = conn.exec_params(sql, [ tablename ])
     end
-    tuples = rs.reduce({}) { | h, row | h[row['tablename']] ||= { :refs => [] }; h[row['tablename']][:refs] << row['refname']; h }
+    tuples = rs.reduce({}) do | h, row |
+      name = row['tablename']
+      h[name] ||= { :refs => [] }
+      col_names = self.columns(conn, name)[name][:columns]
+      refcol_names = self.columns(conn, row['refname'])[row['refname']][:columns]
+      new_ref = {
+        :cols => row['cols'].sub(/\A\{|\}\z/, '').split(',').map { | idx | col_names[idx.to_i - 1] },
+        :refname => row['refname'],
+        :refcols => row['refcols'].sub(/\A\{|\}\z/, '').split(',').map { | idx | refcol_names[idx.to_i - 1] },
+      }
+      h[name][:refs] << new_ref
+      h
+    end
     rs.clear
     tuples
   end
@@ -71,7 +83,7 @@ AND pg_constraint.contype='f'
       h[tablename] = []
       refs = foreign_keys[tablename]
       unless refs.nil?
-        refs[:refs].each { | ref | h[tablename] << ref }
+        refs[:refs].each { | ref | h[tablename] << ref[:refname] }
       end
       h
     end

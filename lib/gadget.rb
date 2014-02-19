@@ -124,6 +124,7 @@ SELECT tg.oid, tg.tgname, t.tablename
 FROM pg_catalog.pg_trigger tg
 INNER JOIN pg_catalog.pg_class c ON tg.tgrelid = c.oid
 INNER JOIN pg_catalog.pg_tables t ON c.relname = t.tablename
+WHERE tg.tgconstrrelid = 0
     END_OF_SQL
 
     tuples = rs.reduce({}) { | h, row | h[row['tgname']] = { :oid => row['oid'], :tablename => row['tablename'] }; h }

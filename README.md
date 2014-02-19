@@ -32,6 +32,14 @@ If `tablename` is given, returns the columns in only that table.
 Returns a list of all foreign keys in the schema reachable through `conn`.
 If `tablename` is given, returns the foreign keys in only that table.
 
+`#functions(conn)`
+
+Returns a list of all functions in the schema reachable through `conn`.
+
+`#triggers(conn)`
+
+Returns a list of all triggers in the schema reachable through `conn`.
+
 `#dependencies(conn)`
 
 Returns a structure representing the dependencies between tables in the schema reachable through `conn`.

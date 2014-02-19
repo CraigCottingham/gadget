@@ -4,23 +4,29 @@ require 'gadget'
 
 require 'pg'
 
-(command, dbname) = ARGV
+(dbname, command, *cmdargs) = ARGV
 
 conn = PG::Connection.open(:dbname => dbname, :host => 'localhost')
 result = nil
 case command
+when 'columns'
+  result = Gadget.columns(conn, cmdargs.shift)
 when 'dependencies'
   result = Gadget.dependencies(conn)
 when 'dependency-graph'
   result = Gadget.dependency_graph(conn)
 when 'dependency-order'
   result = Gadget.tables_in_dependency_order(conn)
+when 'foreign-keys', 'fks'
+  result = Gadget.foreign_keys(conn, cmdargs.shift)
 when 'functions'
   result = Gadget.functions(conn)
 when 'tables'
   result = Gadget.tables(conn)
 when 'triggers'
   result = Gadget.triggers(conn)
+else
+  result = "unknown command '#{command}'"
 end
 conn.close
 p result

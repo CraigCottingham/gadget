@@ -25,9 +25,9 @@ module Gadget
   def self.columns(conn, tablename = nil)
     sql = <<-END_OF_SQL
 SELECT t.tablename, a.attname
-FROM pg_attribute a
-INNER JOIN pg_class c ON a.attrelid=c.oid
-INNER JOIN pg_tables t ON c.relname=t.tablename
+FROM pg_catalog.pg_attribute a
+INNER JOIN pg_catalog.pg_class c ON a.attrelid=c.oid
+INNER JOIN pg_catalog.pg_tables t ON c.relname=t.tablename
 WHERE a.attnum >= 0
     END_OF_SQL
     if tablename.nil?
@@ -44,11 +44,11 @@ WHERE a.attnum >= 0
   def self.foreign_keys(conn, tablename = nil)
     sql = <<-END_OF_SQL
 SELECT t1.tablename AS tablename, pg_constraint.conkey as cols, t2.tablename AS refname, pg_constraint.confkey as refcols
-FROM pg_constraint
-INNER JOIN pg_class c1 ON pg_constraint.conrelid=c1.oid
-INNER JOIN pg_tables t1 ON c1.relname=t1.tablename
-INNER JOIN pg_class c2 ON pg_constraint.confrelid=c2.oid
-INNER JOIN pg_tables t2 ON c2.relname=t2.tablename
+FROM pg_catalog.pg_constraint
+INNER JOIN pg_catalog.pg_class c1 ON pg_constraint.conrelid=c1.oid
+INNER JOIN pg_catalog.pg_tables t1 ON c1.relname=t1.tablename
+INNER JOIN pg_catalog.pg_class c2 ON pg_constraint.confrelid=c2.oid
+INNER JOIN pg_catalog.pg_tables t2 ON c2.relname=t2.tablename
 WHERE t1.schemaname='public'
 AND t2.schemaname='public'
 AND pg_constraint.contype='f'

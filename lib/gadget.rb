@@ -105,4 +105,30 @@ AND pg_constraint.contype='f'
     puts "}"
   end
 
+  def self.functions(conn)
+    rs = conn.exec(<<-END_OF_SQL)
+SELECT p.oid, p.proname
+FROM pg_catalog.pg_proc p
+INNER JOIN pg_catalog.pg_namespace n ON p.pronamespace = n.oid
+WHERE n.nspname = 'public'
+    END_OF_SQL
+
+    tuples = rs.reduce({}) { | h, row | h[row['proname']] = { :oid => row['oid'] }; h }
+    rs.clear
+    tuples
+  end
+
+  def self.triggers(conn)
+    rs = conn.exec(<<-END_OF_SQL)
+SELECT tg.oid, tg.tgname, t.tablename
+FROM pg_catalog.pg_trigger tg
+INNER JOIN pg_catalog.pg_class c ON tg.tgrelid = c.oid
+INNER JOIN pg_catalog.pg_tables t ON c.relname = t.tablename
+    END_OF_SQL
+
+    tuples = rs.reduce({}) { | h, row | h[row['tgname']] = { :oid => row['oid'], :tablename => row['tablename'] }; h }
+    rs.clear
+    tuples
+  end
+
 end

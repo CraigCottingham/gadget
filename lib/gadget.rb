@@ -26,14 +26,14 @@ module Gadget
     sql = <<-END_OF_SQL
 SELECT t.tablename, a.attname
 FROM pg_catalog.pg_attribute a
-INNER JOIN pg_catalog.pg_class c ON a.attrelid=c.oid
-INNER JOIN pg_catalog.pg_tables t ON c.relname=t.tablename
+INNER JOIN pg_catalog.pg_class c ON a.attrelid = c.oid
+INNER JOIN pg_catalog.pg_tables t ON c.relname = t.tablename
 WHERE a.attnum >= 0
     END_OF_SQL
     if tablename.nil?
       rs = conn.exec(sql)
     else
-      sql += " AND t.tablename=$1"
+      sql += " AND t.tablename = $1"
       rs = conn.exec_params(sql, [ tablename ])
     end
     tuples = rs.reduce({}) { | h, row | h[row['tablename']] ||= { :columns => [] }; h[row['tablename']][:columns] << row['attname']; h }
@@ -43,20 +43,22 @@ WHERE a.attnum >= 0
 
   def self.foreign_keys(conn, tablename = nil)
     sql = <<-END_OF_SQL
-SELECT t1.tablename AS tablename, pg_constraint.conkey as cols, t2.tablename AS refname, pg_constraint.confkey as refcols
+SELECT pg_constraint.conname AS name,
+       t1.tablename AS tablename, pg_constraint.conkey AS cols,
+       t2.tablename AS refname, pg_constraint.confkey AS refcols
 FROM pg_catalog.pg_constraint
-INNER JOIN pg_catalog.pg_class c1 ON pg_constraint.conrelid=c1.oid
-INNER JOIN pg_catalog.pg_tables t1 ON c1.relname=t1.tablename
-INNER JOIN pg_catalog.pg_class c2 ON pg_constraint.confrelid=c2.oid
-INNER JOIN pg_catalog.pg_tables t2 ON c2.relname=t2.tablename
-WHERE t1.schemaname='public'
-AND t2.schemaname='public'
-AND pg_constraint.contype='f'
+INNER JOIN pg_catalog.pg_class c1 ON pg_constraint.conrelid = c1.oid
+INNER JOIN pg_catalog.pg_tables t1 ON c1.relname = t1.tablename
+INNER JOIN pg_catalog.pg_class c2 ON pg_constraint.confrelid = c2.oid
+INNER JOIN pg_catalog.pg_tables t2 ON c2.relname = t2.tablename
+WHERE t1.schemaname = 'public'
+AND t2.schemaname = 'public'
+AND pg_constraint.contype = 'f'
     END_OF_SQL
     if tablename.nil?
       rs = conn.exec(sql)
     else
-      sql += " AND t1.tablename=$1"
+      sql += " AND t1.tablename = $1"
       rs = conn.exec_params(sql, [ tablename ])
     end
     tuples = rs.reduce({}) do | h, row |
@@ -65,6 +67,7 @@ AND pg_constraint.contype='f'
       col_names = self.columns(conn, name)[name][:columns]
       refcol_names = self.columns(conn, row['refname'])[row['refname']][:columns]
       new_ref = {
+        :name => row['name'],
         :cols => row['cols'].sub(/\A\{|\}\z/, '').split(',').map { | idx | col_names[idx.to_i - 1] },
         :refname => row['refname'],
         :refcols => row['refcols'].sub(/\A\{|\}\z/, '').split(',').map { | idx | refcol_names[idx.to_i - 1] },

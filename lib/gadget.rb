@@ -97,8 +97,8 @@ WHERE t.schemaname = 'public'
     end
     tuples = rs.reduce({}) do | h, row |
       name = row['tablename']
-      h[name] ||= { :refs => [] }
-      new_ref = {
+      h[name] ||= { :constraints => [] }
+      new_constraint = {
         :name => row['name'],
         :kind => case row['constrainttype']
                  when 'c'
@@ -117,7 +117,7 @@ WHERE t.schemaname = 'public'
                    "*** unknown: '#{row['constrainttype']}'"
                  end,
       }
-      h[name][:refs] << new_ref
+      h[name][:constraints] << new_constraint
       h
     end
     rs.clear

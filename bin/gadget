@@ -12,7 +12,7 @@ case command
 when 'columns'
   result = Gadget.columns(conn, cmdargs.shift)
 when 'constraints'
-  result = Gadget.columns(conn, cmdargs.shift)
+  result = Gadget.constraints(conn, cmdargs.shift)
 when 'dependencies'
   result = Gadget.dependencies(conn)
 when 'dependency-graph'

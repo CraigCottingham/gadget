@@ -79,6 +79,51 @@ AND pg_constraint.contype = 'f'
     tuples
   end
 
+  def self.constraints(conn, tablename = nil)
+    sql = <<-END_OF_SQL
+SELECT pg_constraint.conname AS name,
+       pg_constraint.contype AS constrainttype,
+       t.tablename AS tablename
+FROM pg_catalog.pg_constraint
+INNER JOIN pg_catalog.pg_class c ON pg_constraint.conrelid = c.oid
+INNER JOIN pg_catalog.pg_tables t ON c.relname = t.tablename
+WHERE t.schemaname = 'public'
+    END_OF_SQL
+    if tablename.nil?
+      rs = conn.exec(sql)
+    else
+      sql += " AND t.tablename = $1"
+      rs = conn.exec_params(sql, [ tablename ])
+    end
+    tuples = rs.reduce({}) do | h, row |
+      name = row['tablename']
+      h[name] ||= { :refs => [] }
+      new_ref = {
+        :name => row['name'],
+        :kind => case row['constrainttype']
+                 when 'c'
+                   'check'
+                 when 'f'
+                   'foreign key'
+                 when 'p'
+                   'primary key'
+                 when 't'
+                   'trigger'
+                 when 'u'
+                   'unique'
+                 when 'x'
+                   'exclusion'
+                 else
+                   "*** unknown: '#{row['constrainttype']}'"
+                 end,
+      }
+      h[name][:refs] << new_ref
+      h
+    end
+    rs.clear
+    tuples
+  end
+
   def self.dependencies(conn)
     tables = self.tables(conn)
     foreign_keys = self.foreign_keys(conn)

@@ -17,7 +17,12 @@ module Gadget
 
   def self.tables(conn)
     rs = conn.exec("SELECT c.oid, t.tablename FROM pg_tables t INNER JOIN pg_class c ON c.relname=t.tablename WHERE t.schemaname='public' ORDER BY t.tablename")
-    tuples = rs.reduce({}) { | h, row | h[row['tablename']] = { :oid => row['oid'] }; h }
+    tuples = rs.reduce({}) do | h, row |
+      h[row['tablename']] = {
+        :oid => row['oid'].to_i,
+      }
+      h
+    end
     rs.clear
     tuples
   end
@@ -36,7 +41,11 @@ WHERE a.attnum >= 0
       sql += " AND t.tablename = $1"
       rs = conn.exec_params(sql, [ tablename ])
     end
-    tuples = rs.reduce({}) { | h, row | h[row['tablename']] ||= { :columns => [] }; h[row['tablename']][:columns] << row['attname']; h }
+    tuples = rs.reduce({}) do | h, row |
+      h[row['tablename']] ||= { :columns => [] }
+      h[row['tablename']][:columns] << row['attname']
+      h
+    end
     rs.clear
     tuples
   end
@@ -155,27 +164,57 @@ WHERE t.schemaname = 'public'
 
   def self.functions(conn)
     rs = conn.exec(<<-END_OF_SQL)
-SELECT p.oid, p.proname
+SELECT p.oid, p.proname, p.proargtypes
 FROM pg_catalog.pg_proc p
 INNER JOIN pg_catalog.pg_namespace n ON p.pronamespace = n.oid
 WHERE n.nspname = 'public'
     END_OF_SQL
 
-    tuples = rs.reduce({}) { | h, row | h[row['proname']] = { :oid => row['oid'] }; h }
+    tuples = rs.reduce({}) do | h, row |
+      h[row['proname']] = {
+        :oid => row['oid'].to_i,
+        :arg_types => row['proargtypes'].split(/\s+/).map(&:to_i),
+      }
+      h
+    end
     rs.clear
     tuples
   end
 
   def self.triggers(conn)
     rs = conn.exec(<<-END_OF_SQL)
-SELECT tg.oid, tg.tgname, t.tablename
+SELECT tg.oid, tg.tgname, t.tablename, p.proname
 FROM pg_catalog.pg_trigger tg
 INNER JOIN pg_catalog.pg_class c ON tg.tgrelid = c.oid
 INNER JOIN pg_catalog.pg_tables t ON c.relname = t.tablename
+INNER JOIN pg_catalog.pg_proc p ON tg.tgfoid = p.oid
 WHERE tg.tgconstrrelid = 0
     END_OF_SQL
 
-    tuples = rs.reduce({}) { | h, row | h[row['tgname']] = { :oid => row['oid'], :tablename => row['tablename'] }; h }
+    tuples = rs.reduce({}) do | h, row |
+      h[row['tgname']] = {
+        :oid => row['oid'].to_i,
+        :tablename => row['tablename'],
+        :functionname => row['proname'],
+      }
+      h
+    end
+    rs.clear
+    tuples
+  end
+
+  def self.types(conn)
+    rs = conn.exec(<<-END_OF_SQL)
+SELECT t.oid, t.typname
+FROM pg_catalog.pg_type t
+    END_OF_SQL
+
+    tuples = rs.reduce({}) do | h, row |
+      h[row['typname']] = {
+        :oid => row['oid'].to_i,
+      }
+      h
+    end
     rs.clear
     tuples
   end

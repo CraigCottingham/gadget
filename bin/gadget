@@ -27,6 +27,8 @@ when 'tables'
   result = Gadget.tables(conn)
 when 'triggers'
   result = Gadget.triggers(conn)
+when 'types'
+  result = Gadget.types(conn)
 else
   result = "unknown command '#{command}'"
 end

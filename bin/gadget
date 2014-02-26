@@ -23,6 +23,8 @@ when 'foreign-keys', 'fks'
   result = Gadget.foreign_keys(conn, cmdargs.shift)
 when 'functions'
   result = Gadget.functions(conn)
+when 'sequences'
+  result = Gadget.sequences(conn)
 when 'tables'
   result = Gadget.tables(conn)
 when 'triggers'

@@ -16,7 +16,14 @@ module Gadget
   end
 
   def self.tables(conn)
-    rs = conn.exec("SELECT c.oid, t.tablename FROM pg_tables t INNER JOIN pg_class c ON c.relname=t.tablename WHERE t.schemaname='public' ORDER BY t.tablename")
+    sql = <<-END_OF_SQL
+SELECT c.oid, t.tablename
+FROM pg_catalog.pg_tables t
+INNER JOIN pg_catalog.pg_class c ON c.relname=t.tablename
+WHERE t.schemaname='public'
+ORDER BY t.tablename
+    END_OF_SQL
+    rs = conn.exec("")
     tuples = rs.reduce({}) do | h, row |
       h[row['tablename']] = {
         :oid => row['oid'].to_i,

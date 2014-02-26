@@ -188,6 +188,25 @@ WHERE n.nspname = 'public'
     tuples
   end
 
+  def self.sequences(conn)
+    sql = <<-END_OF_SQL
+SELECT c.oid, c.relname
+FROM pg_catalog.pg_class c
+INNER JOIN pg_catalog.pg_namespace n on c.relnamespace = n.oid
+WHERE c.relkind = 'S'
+AND n.nspname = 'public'
+    END_OF_SQL
+    rs = conn.exec(sql)
+    tuples = rs.reduce({}) do | h, row |
+      h[row['relname']] = {
+        :oid => row['oid'].to_i,
+      }
+      h
+    end
+    rs.clear
+    tuples
+  end
+
   def self.triggers(conn)
     rs = conn.exec(<<-END_OF_SQL)
 SELECT tg.oid, tg.tgname, t.tablename, p.proname

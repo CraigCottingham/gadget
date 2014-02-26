@@ -22,7 +22,7 @@ FROM pg_catalog.pg_tables t
 INNER JOIN pg_catalog.pg_class c ON c.relname=t.tablename
 WHERE t.schemaname='public'
     END_OF_SQL
-    rs = conn.exec("")
+    rs = conn.exec(sql)
     tuples = rs.reduce({}) do | h, row |
       h[row['tablename']] = {
         :oid => row['oid'].to_i,

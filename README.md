@@ -32,13 +32,10 @@ If `tablename` is given, returns the columns in only that table.
 Returns a list of all foreign keys in the schema reachable through `conn`.
 If `tablename` is given, returns the foreign keys in only that table.
 
-`#functions(conn)`
+`#constraints(conn, tablename=nil)`
 
-Returns a list of all functions in the schema reachable through `conn`.
-
-`#triggers(conn)`
-
-Returns a list of all triggers in the schema reachable through `conn`.
+Returns a list of all constraints in the schema reachable through `conn`.
+If `tablename` is given, returns the constraints in only that table.
 
 `#dependencies(conn)`
 
@@ -49,6 +46,26 @@ Table A is defined as dependent on table B if A contains a foreign key reference
 
 Returns a list of all tables in the schema reachable through `conn`, ordered such that any given table
 appears later in the list than all of its dependencies.
+
+`#dependency_graph(conn)`
+
+Returns `.dot` script (suitable for feeding into Graphviz) describing the table dependency graph.
+
+`#functions(conn)`
+
+Returns a list of all functions in the schema reachable through `conn`.
+
+`#sequences(conn)`
+
+Returns a list of all sequences in the schema reachable through `conn`.
+
+`#triggers(conn)`
+
+Returns a list of all triggers in the schema reachable through `conn`.
+
+`#types(conn)`
+
+Returns a list of all types in the schema reachable through `conn`.
 
 ## Contributing
 

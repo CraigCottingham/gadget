@@ -40,6 +40,7 @@ FROM pg_catalog.pg_attribute a
 INNER JOIN pg_catalog.pg_class c ON a.attrelid = c.oid
 INNER JOIN pg_catalog.pg_tables t ON c.relname = t.tablename
 WHERE a.attnum >= 0
+AND a.attisdropped IS FALSE
     END_OF_SQL
     if tablename.nil?
       rs = conn.exec(sql)

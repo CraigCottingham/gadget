@@ -82,22 +82,26 @@ WHERE t.schemaname='public'
   def self.columns(conn, *args)
     options = args.extract_options!
     tablename = args.shift
+    nspname = args.shift || "public"
 
     sql = <<-END_OF_SQL
-SELECT t.tablename, a.attname
+SELECT t.tablename, a.attname, ns.nspname
 FROM pg_catalog.pg_attribute a
 INNER JOIN pg_catalog.pg_class c ON a.attrelid = c.oid
 INNER JOIN pg_catalog.pg_tables t ON c.relname = t.tablename
+INNER JOIN pg_catalog.pg_namespace ns ON c.relnamespace = ns.oid
 WHERE a.attnum >= 0
+AND t.schemaname = ns.nspname
+AND ns.nspname = $1
     END_OF_SQL
     unless options[:include_dropped]
       sql += " AND a.attisdropped IS FALSE"
     end
     if tablename.nil?
-      rs = conn.exec(sql)
+      rs = conn.exec_params(sql, [ nspname ])
     else
-      sql += " AND t.tablename = $1"
-      rs = conn.exec_params(sql, [ tablename ])
+      sql += " AND t.tablename = $2"
+      rs = conn.exec_params(sql, [ nspname, tablename ])
     end
     tuples = rs.reduce({}) do | h, row |
       h[row['tablename']] ||= { :columns => [] }

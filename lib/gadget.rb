@@ -85,7 +85,7 @@ WHERE t.schemaname='public'
     nspname = args.shift || "public"
 
     sql = <<-END_OF_SQL
-SELECT t.tablename, a.attname, ns.nspname
+SELECT t.tablename, a.attnum, a.attname, ns.nspname
 FROM pg_catalog.pg_attribute a
 INNER JOIN pg_catalog.pg_class c ON a.attrelid = c.oid
 INNER JOIN pg_catalog.pg_tables t ON c.relname = t.tablename
@@ -104,8 +104,8 @@ AND ns.nspname = $1
       rs = conn.exec_params(sql, [ nspname, tablename ])
     end
     tuples = rs.reduce({}) do | h, row |
-      h[row["tablename"]] ||= { columns: [] }
-      h[row["tablename"]][:columns] << row["attname"]
+      h[row["tablename"]] ||= { columns: {} }
+      h[row["tablename"]][:columns][row["attnum"]] = row["attname"]
       h
     end
     rs.clear
@@ -160,9 +160,9 @@ AND pg_constraint.contype = 'f'
       refcol_names = self.columns(conn, row["refname"], include_dropped: true)[row["refname"]][:columns]
       new_ref = {
         name: row["name"],
-        cols: row["cols"].sub(/\A\{|\}\z/, "").split(",").map { | idx | col_names[idx.to_i - 1] },
+        cols: row["cols"].sub(/\A\{|\}\z/, "").split(",").map { | attnum | col_names[attnum] },
         ref_name: row["refname"],
-        ref_cols: row["refcols"].sub(/\A\{|\}\z/, "").split(",").map { | idx | refcol_names[idx.to_i - 1] },
+        ref_cols: row["refcols"].sub(/\A\{|\}\z/, "").split(",").map { | attnum | refcol_names[attnum] },
       }
       h[name][:refs] << new_ref
       h

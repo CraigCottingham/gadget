@@ -1,9 +1,9 @@
 # encoding: utf-8
 
-require 'pg'
-require 'tsort'
+require "pg"
+require "tsort"
 
-require 'gadget/version'
+require "gadget/version"
 
 ## monkey patch Hash to gain .extractable_options?
 class Hash
@@ -56,8 +56,8 @@ WHERE t.schemaname='public'
     END_OF_SQL
     rs = conn.exec(sql)
     tuples = rs.reduce({}) do | h, row |
-      h[row['tablename']] = {
-        :oid => row['oid'].to_i,
+      h[row["tablename"]] = {
+        oid: row["oid"].to_i,
       }
       h
     end
@@ -69,7 +69,7 @@ WHERE t.schemaname='public'
   #
   # ==== Usage
   #   columns = Gadget.columns(conn)
-  #   columns_in_table = Gadget.columns(conn, 'tablename')
+  #   columns_in_table = Gadget.columns(conn, "tablename")
   #
   # ==== Parameters
   # * +conn+ - a +PG::Connection+ to the database
@@ -104,8 +104,8 @@ AND ns.nspname = $1
       rs = conn.exec_params(sql, [ nspname, tablename ])
     end
     tuples = rs.reduce({}) do | h, row |
-      h[row['tablename']] ||= { :columns => [] }
-      h[row['tablename']][:columns] << row['attname']
+      h[row["tablename"]] ||= { columns: [] }
+      h[row["tablename"]][:columns] << row["attname"]
       h
     end
     rs.clear
@@ -116,7 +116,7 @@ AND ns.nspname = $1
   #
   # ==== Usage
   #   fks = Gadget.foreign_keys(conn)
-  #   fks_in_table = Gadget.foreign_keys(conn, 'tablename')
+  #   fks_in_table = Gadget.foreign_keys(conn, "tablename")
   #
   # ==== Parameters
   # * +conn+ - a +PG::Connection+ to the database
@@ -154,15 +154,15 @@ AND pg_constraint.contype = 'f'
       rs = conn.exec_params(sql, [ tablename ])
     end
     tuples = rs.reduce({}) do | h, row |
-      name = row['tablename']
-      h[name] ||= { :refs => [] }
-      col_names = self.columns(conn, name, :include_dropped => true)[name][:columns]
-      refcol_names = self.columns(conn, row['refname'], :include_dropped => true)[row['refname']][:columns]
+      name = row["tablename"]
+      h[name] ||= { refs: [] }
+      col_names = self.columns(conn, name, include_dropped: true)[name][:columns]
+      refcol_names = self.columns(conn, row["refname"], include_dropped: true)[row["refname"]][:columns]
       new_ref = {
-        :name => row['name'],
-        :cols => row['cols'].sub(/\A\{|\}\z/, '').split(',').map { | idx | col_names[idx.to_i - 1] },
-        :ref_name => row['refname'],
-        :ref_cols => row['refcols'].sub(/\A\{|\}\z/, '').split(',').map { | idx | refcol_names[idx.to_i - 1] },
+        name: row["name"],
+        cols: row["cols"].sub(/\A\{|\}\z/, "").split(",").map { | idx | col_names[idx.to_i - 1] },
+        ref_name: row["refname"],
+        ref_cols: row["refcols"].sub(/\A\{|\}\z/, "").split(",").map { | idx | refcol_names[idx.to_i - 1] },
       }
       h[name][:refs] << new_ref
       h
@@ -175,7 +175,7 @@ AND pg_constraint.contype = 'f'
   #
   # ==== Usage
   #   constraints = Gadget.constraints(conn)
-  #   constraints_in_table = Gadget.constraints(conn, 'tablename')
+  #   constraints_in_table = Gadget.constraints(conn, "tablename")
   #
   # ==== Parameters
   # * +conn+ - a +PG::Connection+ to the database
@@ -213,26 +213,26 @@ WHERE t.schemaname = 'public'
       rs = conn.exec_params(sql, [ tablename ])
     end
     tuples = rs.reduce({}) do | h, row |
-      name = row['tablename']
-      h[name] ||= { :constraints => [] }
+      name = row["tablename"]
+      h[name] ||= { constraints: [] }
       new_constraint = {
-        :name => row['name'],
-        :kind => case row['constrainttype']
-                 when 'c'
-                   'check'
-                 when 'f'
-                   'foreign key'
-                 when 'p'
-                   'primary key'
-                 when 't'
-                   'trigger'
-                 when 'u'
-                   'unique'
-                 when 'x'
-                   'exclusion'
-                 else
-                   "*** unknown: '#{row['constrainttype']}'"
-                 end,
+        name: row["name"],
+        kind: case row["constrainttype"]
+              when "c"
+                "check"
+              when "f"
+                "foreign key"
+              when "p"
+                "primary key"
+              when "t"
+                "trigger"
+              when "u"
+                "unique"
+              when "x"
+                "exclusion"
+              else
+                %Q(*** unknown: "#{row["constrainttype"]}"")
+              end,
       }
       h[name][:constraints] << new_constraint
       h
@@ -331,9 +331,9 @@ WHERE n.nspname = 'public'
     END_OF_SQL
 
     tuples = rs.reduce({}) do | h, row |
-      h[row['proname']] = {
-        :oid => row['oid'].to_i,
-        :arg_types => row['proargtypes'].split(/\s+/).map(&:to_i),
+      h[row["proname"]] = {
+        oid: row["oid"].to_i,
+        arg_types: row["proargtypes"].split(/\s+/).map(&:to_i),
       }
       h
     end
@@ -365,8 +365,8 @@ AND n.nspname = 'public'
     END_OF_SQL
     rs = conn.exec(sql)
     tuples = rs.reduce({}) do | h, row |
-      h[row['relname']] = {
-        :oid => row['oid'].to_i,
+      h[row["relname"]] = {
+        oid: row["oid"].to_i,
       }
       h
     end
@@ -407,10 +407,10 @@ WHERE tg.tgconstrrelid = 0
       rs = conn.exec_params(sql, [ tablename ])
     end
     tuples = rs.reduce({}) do | h, row |
-      h[row['tgname']] = {
-        :oid => row['oid'].to_i,
-        :table_name => row['tablename'],
-        :function_name => row['proname'],
+      h[row["tgname"]] = {
+        oid: row["oid"].to_i,
+        table_name: row["tablename"],
+        function_name: row["proname"],
       }
       h
     end
@@ -439,8 +439,8 @@ FROM pg_catalog.pg_type t
     END_OF_SQL
 
     tuples = rs.reduce({}) do | h, row |
-      h[row['typname']] = {
-        :oid => row['oid'].to_i,
+      h[row["typname"]] = {
+        oid: row["oid"].to_i,
       }
       h
     end
